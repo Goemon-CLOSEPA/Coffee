@@ -1,16 +1,18 @@
 import os
+import time
+from datetime import datetime
 from dotenv import load_dotenv
 from news_fetcher import fetch_latest_news
 from history_manager import is_posted, save_to_history
 from summarizer import summarize_article
 from x_poster import post_to_x
+from chart_generator import generate_coffee_futures_chart, generate_market_commentary, CHART_FILENAME
 
 # Load environment variables
 load_dotenv()
 
-def main():
-    print("Starting Coffee & Crypto X Bot...")
-    
+def run_news_branch():
+    print("Executing News Post Branch...")
     # 1. Fetch news
     print("Fetching latest news...")
     try:
@@ -77,6 +79,56 @@ def main():
         print("Failed to post to X. URL not recorded in history.")
         
     print("\nExecution completed.")
+
+def run_chart_branch():
+    print("Executing Morning Chart Branch...")
+    
+    # 1. Generate Chart
+    latest_price, pct_change = generate_coffee_futures_chart()
+    
+    if latest_price is None:
+        print("Failed to fetch coffee futures data.")
+        return
+        
+    # 2. Generate Market Commentary
+    print("Generating market commentary via Gemini...")
+    commentary = generate_market_commentary(latest_price, pct_change)
+    
+    if not commentary:
+        print("Failed to generate market commentary.")
+        return
+        
+    print(f"\n[Generated Commentary]\n{commentary}\n")
+    
+    # 3. Post to X with Image
+    print("Posting Chart to X...")
+    if os.environ.get("DRY_RUN", "false").lower() == "true":
+        print("DRY_RUN is enabled. Skipping actual post to X.")
+    else:
+        try:
+            success = post_to_x(text=commentary, image_path=CHART_FILENAME)
+            if success:
+                print("Successfully posted Morning Chart to X.")
+            else:
+                print("Failed to post Morning Chart.")
+        except Exception as e:
+            print(f"Error during posting to X: {e}")
+
+def main():
+    print("Starting Coffee & Crypto X Bot...")
+    
+    # Check current time
+    # GitHub actions servers run in UTC. 23:00 UTC == 08:00 JST.
+    current_utc_hour = datetime.utcnow().hour
+    print(f"Current UTC Hour: {current_utc_hour}")
+    
+    # Branching Logic
+    if current_utc_hour == 23:
+        # Run Chart Branch at 8:00 AM JST
+        run_chart_branch()
+    else:
+        # Run standard news branch otherwise
+        run_news_branch()
 
 if __name__ == "__main__":
     main()

@@ -1,11 +1,10 @@
 import os
 import tweepy
 
-def post_to_x(text, url=""):
+def post_to_x(text, url="", image_path=None):
     """
-    Posts the summarized text and url to X using API v2.
-    Keys expected from environment variables (.env):
-    X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET
+    Posts the text and url/image to X.
+    Uses API v1.1 to upload media (if any), then uses API v2 to post the tweet.
     """
     consumer_key = os.environ.get("X_API_KEY")
     consumer_secret = os.environ.get("X_API_SECRET")
@@ -17,6 +16,7 @@ def post_to_x(text, url=""):
         return False
         
     try:
+        # Client for API v2 operations (Posting Tweets)
         client = tweepy.Client(
             consumer_key=consumer_key,
             consumer_secret=consumer_secret,
@@ -24,10 +24,26 @@ def post_to_x(text, url=""):
             access_token_secret=access_token_secret
         )
         
-        # Format the tweet content: Text + Newline + URL
-        tweet_content = f"{text}\n\n{url}".strip()
+        # Format the tweet content
+        tweet_content = text
+        if url:
+             tweet_content = f"{text}\n\n{url}"
         
-        response = client.create_tweet(text=tweet_content)
+        # Handle Media Upload if an image is provided
+        media_ids = None
+        if image_path and os.path.exists(image_path):
+            # API v1.1 for media upload
+            auth = tweepy.OAuth1UserHandler(
+                consumer_key, consumer_secret, access_token, access_token_secret
+            )
+            api = tweepy.API(auth)
+            
+            print(f"Uploading media: {image_path}")
+            media = api.media_upload(image_path)
+            media_ids = [media.media_id]
+        
+        # Post the tweet (with or without media)
+        response = client.create_tweet(text=tweet_content.strip(), media_ids=media_ids)
         print(f"Successfully posted to X: {response.data}")
         return True
         
