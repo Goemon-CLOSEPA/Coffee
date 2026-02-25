@@ -2,10 +2,19 @@ name: Coffee & Crypto X Bot
 
 on:
   schedule:
-    # Runs 5 times a day (JST: 8:00, 12:00, 15:00, 19:00, 22:00) 
-    # UTC equivalent: 23:00 (prev day), 03:00, 06:00, 10:00, 13:00
-    - cron: '0 23,3,6,10,13 * * *'
-  workflow_dispatch: # Allows manual trigger
+    # Runs 5 times a day (JST: 7:00, 12:00, 15:00, 19:00, 22:00) 
+    # UTC equivalent: 22:00 (prev day), 03:00, 06:00, 10:00, 13:00
+    - cron: '0 22,3,6,10,13 * * *'
+  workflow_dispatch:
+    inputs:
+      run_type:
+        description: 'Select run type'
+        required: true
+        type: choice
+        options:
+        - chart
+        - news
+        default: 'chart'
 
 jobs:
   run-bot:
@@ -36,6 +45,7 @@ jobs:
         X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         DRY_RUN: "false" # Set true to test github action without actually posting
+        RUN_TYPE: ${{ inputs.run_type }}
       run: python main.py
       
     - name: Commit posted URLs history
