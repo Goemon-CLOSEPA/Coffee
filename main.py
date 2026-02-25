@@ -117,18 +117,28 @@ def run_chart_branch():
 def main():
     print("Starting Coffee & Crypto X Bot...")
     
-    # Check current time
-    # GitHub actions servers run in UTC. 23:00 UTC == 08:00 JST.
-    current_utc_hour = datetime.utcnow().hour
-    print(f"Current UTC Hour: {current_utc_hour}")
+    # Check manual run type
+    run_type = os.environ.get("RUN_TYPE")
     
-    # Branching Logic
-    if current_utc_hour == 23:
-        # Run Chart Branch at 8:00 AM JST
+    if run_type == "chart":
+        print("Manual Trigger: Chart Branch")
         run_chart_branch()
-    else:
-        # Run standard news branch otherwise
+    elif run_type == "news":
+        print("Manual Trigger: News Branch")
         run_news_branch()
+    else:
+        # Check current time
+        # GitHub actions servers run in UTC. 22:00 UTC == 07:00 JST.
+        current_utc_hour = datetime.utcnow().hour
+        print(f"Current UTC Hour: {current_utc_hour}")
+        
+        # Branching Logic
+        if current_utc_hour == 22:
+            # Run Chart Branch at 7:00 AM JST
+            run_chart_branch()
+        else:
+            # Run standard news branch otherwise
+            run_news_branch()
 
 if __name__ == "__main__":
     main()

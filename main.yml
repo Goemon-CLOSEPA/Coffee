@@ -1,0 +1,65 @@
+name: Coffee & Crypto X Bot
+
+on:
+  schedule:
+    # Runs 5 times a day (JST: 7:00, 12:00, 15:00, 19:00, 22:00) 
+    # UTC equivalent: 22:00 (prev day), 03:00, 06:00, 10:00, 13:00
+    - cron: '0 22,3,6,10,13 * * *'
+  workflow_dispatch:
+    inputs:
+      run_type:
+        description: 'Select run type'
+        required: true
+        type: choice
+        options:
+        - chart
+        - news
+        default: 'chart'
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    
+    # Needs permissions to commit back to the repo
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+      
+    - name: Run Bot
+      env:
+        X_API_KEY: ${{ secrets.X_API_KEY }}
+        X_API_SECRET: ${{ secrets.X_API_SECRET }}
+        X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+        X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        DRY_RUN: "false" # Set true to test github action without actually posting
+        RUN_TYPE: ${{ inputs.run_type }}
+      run: python main.py
+      
+    - name: Commit posted URLs history
+      # Only commit if posted_urls.txt changed
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        # Make sure posted_urls.txt exists (just in case)
+        touch posted_urls.txt
+        git add posted_urls.txt
+        # Check if there are changes to commit
+        if [ -n "$(git status --porcelain)" ]; then
+          git commit -m "Update posted URLs history [skip ci]"
+          git push
+        else
+          echo "No changes to commit."
+        fi
