@@ -43,7 +43,11 @@ def post_to_x(text, url="", image_path=None):
             media_ids = [media.media_id]
         
         # Post the tweet (with or without media)
-        response = client.create_tweet(text=tweet_content.strip(), media_ids=media_ids)
+        if media_ids:
+            response = client.create_tweet(text=tweet_content.strip(), media_ids=media_ids)
+        else:
+            response = client.create_tweet(text=tweet_content.strip())
+            
         print(f"Successfully posted to X: {response.data}")
         return True
         
@@ -53,8 +57,9 @@ def post_to_x(text, url="", image_path=None):
     except tweepy.errors.Unauthorized:
         print("Error: Twitter Unauthorized. Please check your API keys.")
         return False
-    except tweepy.errors.Forbidden:
-        print("Error: Twitter Forbidden. Ensure the app has Read and Write permissions.")
+    except tweepy.errors.Forbidden as e:
+        print(f"Error: Twitter Forbidden (403). Details: {e}")
+        # This usually means Tweet is too long, duplicate content, or permissions issue
         return False
     except Exception as e:
         print(f"Unknown Network or API Error posting to X: {e}")
