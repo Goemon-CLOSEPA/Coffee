@@ -14,6 +14,7 @@ on:
         options:
         - chart
         - news
+        - test
         default: 'chart'
 
 jobs:
@@ -46,7 +47,12 @@ jobs:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         DRY_RUN: "false" # Set true to test github action without actually posting
         RUN_TYPE: ${{ inputs.run_type }}
-      run: python main.py
+      run: |
+        if [ "$RUN_TYPE" = "test" ]; then
+          python test_twitter.py
+        else
+          python main.py
+        fi
       
     - name: Commit posted URLs history
       # Only commit if posted_urls.txt changed
