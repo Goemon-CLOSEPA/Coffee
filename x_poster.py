@@ -58,7 +58,11 @@ def post_to_x(text, url="", image_path=None):
         print("Error: Twitter Unauthorized. Please check your API keys.")
         return False
     except tweepy.errors.Forbidden as e:
-        print(f"Error: Twitter Forbidden (403). Details: {e}")
+        print(f"\n[403 FORBIDDEN ERROR DETAILS V2]")
+        print(f"API Response messages: {e.api_messages}")
+        print(f"API Response errors: {e.api_errors}")
+        print(f"API Response codes: {e.api_codes}")
+        print(f"Raw string: {e}")
         # This usually means Tweet is too long, duplicate content, or permissions issue
         return False
     except Exception as e:
