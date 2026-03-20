@@ -2,9 +2,9 @@ name: Coffee & Crypto X Bot
 
 on:
   schedule:
-    # Runs 5 times a day (JST: 7:00, 12:00, 15:00, 19:00, 22:00) 
-    # UTC equivalent: 22:00 (prev day), 03:00, 06:00, 10:00, 13:00
-    - cron: '0 22,3,6,10,13 * * *'
+    # Runs 3 times a day: 1 Chart (JST: 7:00), 2 News (JST: 12:00, 19:00) 
+    # UTC equivalent: 22:00 (prev day), 03:00, 10:00
+    - cron: '0 22,3,10 * * *'
   workflow_dispatch:
     inputs:
       run_type:
@@ -69,3 +69,4 @@ jobs:
         else
           echo "No changes to commit."
         fi
+
